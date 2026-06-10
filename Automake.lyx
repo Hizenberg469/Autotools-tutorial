@@ -1,0 +1,993 @@
+#LyX 2.5 created this file. For more info see https://www.lyx.org/
+\lyxformat 643
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\begin_modules
+figs-within-sections
+tabs-within-sections
+algorithm2e
+\end_modules
+\maintain_unincluded_children no
+\language american
+\language_package default
+\inputencoding utf8
+\fontencoding auto
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_roman_osf false
+\font_sans_osf false
+\font_typewriter_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\float_placement class
+\float_alignment class
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize a4
+\use_geometry false
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification default
+\crossref_package refstyle
+\use_formatted_ref 0
+\use_minted 0
+\use_lineno 0
+\backgroundcolor white
+\fontcolor black
+\notefontcolor none
+\boxbgcolor none
+\table_border_color default
+\table_odd_row_color default
+\table_even_row_color default
+\table_alt_row_colors_start 1
+\index Index
+\shortcut idx
+\color #008080
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tablestyle default
+\tracking_changes false
+\output_changes false
+\change_bars false
+\postpone_fragile_content true
+\html_math_output 0
+\html_css_as_file 1
+\html_be_strict false
+\docbook_table_output 0
+\docbook_mathml_prefix 1
+\docbook_mathml_version 0
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Automake
+\end_layout
+
+\begin_layout Author
+Let Automake do the work :)
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Introduction
+\end_layout
+
+\begin_layout Standard
+As we have discussed about the Automake in the Autotools,
+ it is seems very tempting to start generate Makefiles for your projects and generate a Makefile for each module with a master Makefile at the top of project directory structure.
+ However,
+ there is a very good and informative paper by Peter Miller regarding 
+\begin_inset Quotes eld
+\end_inset
+
+
+\begin_inset CommandInset href
+LatexCommand href
+name "Recursive Makefiles are Considered Harmful"
+target "https://wikileaks.org/ciav7p1/cms/files/auug97.pdf"
+literal "false"
+
+\end_inset
+
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+ As per this paper,
+ projects with Recursive Makefiles build system are not very optimal for building projects,
+ especially which are very large in size.
+ But,
+ writing a single Makefile for a very large project or even generating it using Automake is not very manageable,
+ which is good argument.
+ So,
+ a 
+\begin_inset CommandInset href
+LatexCommand href
+name "blog"
+target "http://karelzak.blogspot.com/2013/02/non-recursive-automake.html"
+literal "false"
+
+\end_inset
+
+ by Karel Zak suggest that we can create a single resulting Makefile from bunch of 
+\shape italic
+include files
+\shape default
+ which are included in main Makefile.am.
+ Therefore,
+ our first goal is to create a build system which is optimal.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+placement document
+alignment center
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename images/project-tree.png
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Project structure
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Enabling Automake in configure.ac
+\end_layout
+
+\begin_layout Standard
+
+\size normal
+Just for the introduction,
+ lets briefly understand what's configure.ac is?
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+configure.ac is the input file which is used by Autoconf to generate configure which is used to setup the environment for project compilation.
+ In other word,
+ this script allows us to configure our project build system.
+ Detailed discussion over this is done in 
+\begin_inset CommandInset href
+LatexCommand href
+name "Autoconf"
+target "Autoconf.html"
+type "file:"
+literal "false"
+
+\end_inset
+
+ tutorial.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Much of the configure.ac script can be generated automatically based on the existing project tree or even updated based on the the current status.
+ This automatic generation of configure.ac script is done using autoscan script.
+ Note,
+ that as the project structure grows,
+ we don't have to create new configure.ac every time.
+ Instead,
+ autoscan will read the existing configure.ac and improve upon it.
+ The resulting output of the autoscan is configure.scan and autoscan.log.
+ configure.scan can be change to configure.ac to use by autoconf for configuration of the project.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+The output of autoscan looks like:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\size default
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "language=bash,basicstyle={\footnotesize\ttfamily},breaklines=true,tabsize=10"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+# Process this file with autoconf to produce a configure script.
+    -*- Autoconf -*- 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+AC_PREREQ([2.71]) 
+\end_layout
+
+\begin_layout Plain Layout
+AC_INIT([FULL-PACKAGE-NAME],
+ [VERSION],
+ [BUG-REPORT-ADDRESS]) 
+\end_layout
+
+\begin_layout Plain Layout
+AC_CONFIG_SRCDIR([foo/myprog.c]) 
+\end_layout
+
+\begin_layout Plain Layout
+AC_CONFIG_HEADERS([config.h]) 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+# Checks for programs.
+\end_layout
+
+\begin_layout Plain Layout
+# This below is added only for C++ files.
+\end_layout
+
+\begin_layout Plain Layout
+AC_PROG_CXX AC_PROG_CC 
+\end_layout
+
+\begin_layout Plain Layout
+\align center
+
+\end_layout
+
+\begin_layout Plain Layout
+# Checks for libraries.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+# Checks for header files.
+\end_layout
+
+\begin_layout Plain Layout
+# Checks for typedefs,
+ structures,
+ and compiler characteristics.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+AC_CHECK_HEADER_STDBOOL 
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+# Checks for library functions.
+ 
+\end_layout
+
+\begin_layout Plain Layout
+AC_CONFIG_FILES([Makefile]) 
+\end_layout
+
+\begin_layout Plain Layout
+AC_OUTPUT
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\shape italic
+configure.ac generated from autoscan.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+
+\size normal
+Note that the generated script is not enabled to use Automake tool the generate the Makefiles from Makefile.am input files.
+ Oh wait!
+ Didn't we just say that Automake generates Makefiles automatically for the project.
+ Well,
+ lets address that in the next section.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Now,
+ to enable the Automake in this build system,
+ we need to add one single line onto the above script.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\size default
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "language=bash,basicstyle={\footnotesize\ttfamily}"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+AC_PREREQ([2.71])
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+AC_INIT([FULL-PACKAGE-NAME],
+ [VERSION],
+ [BUG-REPORT-ADDRESS])
+\end_layout
+
+\begin_layout Plain Layout
+AC_INIT_AUTOMAKE
+\end_layout
+
+\begin_layout Plain Layout
+AC_CONFIG_SRCDIR([creational-pattern/src/MazeGame.cpp])
+\end_layout
+
+\begin_layout Plain Layout
+AC_CONFIG_HEADERS([config.h])
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\shape italic
+Automake enabled
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\size normal
+Executing the autoreconf -i command will now make the build system of project,
+ Automake enabled.
+\end_layout
+
+\begin_layout Section
+What is a Makefile.am file?
+\end_layout
+
+\begin_layout Standard
+
+\size normal
+It is just like a regular Makefile,
+ but with comparatively less Makefile code and some syntactically specific to Automake.
+ But,
+ why Automake needs some input file at the first place to generate a output Makefile.
+ Well,
+ the main intent of the Automake tool is to generate a Makefile which mostly comprises of boilerplate code.
+ Since GCS enforce lot of standard rules,
+ this leads to lot of code begin boilerplate which makes it very redundant to write it by hand and also making sure that it is logically correct.
+ Here,
+ Automake comes in handy as it generates a 
+\begin_inset Quotes eld
+\end_inset
+
+complete
+\begin_inset Quotes erd
+\end_inset
+
+ Makefile which is compliant to GCS.
+ Another benefit of using Automake is,
+ it has automatic dependency tracking capability which allows the tracking of header files changes which are included in the source files.
+ It is annoying problem where change in header files are often not reflected in the compiled build due to missing dependency checks and Automake handles it very gracefully to ensure the dependency checks are efficiently managed.
+\end_layout
+
+\begin_layout Section
+Preparing the structure
+\end_layout
+
+\begin_layout Standard
+Since our goal is to create a non-recursive build system of Makefiles using Automake,
+ all the targets rules should appear in the top-makefile which may tell you that we may need to write a big Makefile.am for a project which is at the top of project directory.
+ Fortunately,
+ Automake can still create a single Makefile from bunch of input *.am files.
+ This makes it super manageable.
+ Writing bunch of 
+\begin_inset Quotes eld
+\end_inset
+
+Makemodule.am
+\begin_inset Quotes erd
+\end_inset
+
+ for each sub-directories of the project and including them in top Makefile.am will help us in completing our goal.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "language=bash,basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+bin_PROGRAMS =
+\end_layout
+
+\begin_layout Plain Layout
+man_MANS =
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+include foo/Makemodule.am
+\end_layout
+
+\begin_layout Plain Layout
+include bar/Makemodule.am
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\shape italic
+Makefile.am in root directory.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Here,
+ we can see that defining the variable at the top of top Makefile.am and then using it in the Makemodule.am in the sub-directories.
+\begin_inset Newline newline
+\end_inset
+
+For ex,
+ in 
+\series bold
+foo/Makemodule.am
+\series default
+:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "language=bash,basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+bin_PROGRAMS += myprog					# PLV
+\end_layout
+
+\begin_layout Plain Layout
+man_MANS += foo/myprog.8
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+myprog_SOURCES = foo/myprog.c 
+\backslash
+			# PSV
+\end_layout
+
+\begin_layout Plain Layout
+                 foo/myprog-utils.c
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+
+\shape italic
+Makemodule.am in foo directory of project.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+Here in Makefile.am and Makemodule.am,
+ we are using two important types of variables.
+ These are 
+\series bold
+Product List Variable
+\series default
+ and 
+\series bold
+Product Source Variable
+\series default
+.
+\end_layout
+
+\begin_layout Subsection
+Product List Variable:
+\end_layout
+
+\begin_layout Standard
+Products of the build systems are specified to the Makefile.am using 
+\shape italic
+Product List variable (PLV)
+\shape default
+.
+ These are class of variables which have special meaning to Automake.
+ They tell what are the resultant output of the Makefiles or build system that will be generated after the successful completion of the build process.
+ This variable consist of white-space-separated list of products and the variable (as you can see in above example) consist of two major parts separated by a underscore.
+\begin_inset Newline newline
+\end_inset
+
+These two components are:
+\end_layout
+
+\begin_layout Itemize
+bin:
+ Prefix
+\end_layout
+
+\begin_layout Itemize
+PROGRAMS:
+ Primary
+\end_layout
+
+\begin_layout Standard
+The 
+\shape italic
+bin 
+\shape default
+portion of the PLV represent a 
+\shape italic
+installation location prefix
+\shape default
+.
+ This is used to define the installation location for the list of products which are mentioned in the PLV.
+ The GCS defines many installation locations.
+ However,
+ make variable ending with 
+\shape italic
+dir 
+\shape default
+,
+ whose value is a file-system location,
+ is a viable installation location and can be used as prefix in a Automake PLV.
+\begin_inset Newline newline
+\end_inset
+
+What we mean here is that any 
+\series bold
+make
+\series default
+ variable ending with 
+\family typewriter
+dir,
+ 
+\family default
+for example 
+\family typewriter
+$(bindir)
+\family default
+,
+ with a installation location value can be used by Automake to produce 
+\family typewriter
+install 
+\family default
+rule which will install the list of products to the 
+\family typewriter
+$(bindir)
+\family default
+ location.
+ However,
+ only those products will be installed that are mentioned in the PLV which have prefix 
+\family typewriter
+bin
+\family default
+ as mentioned in the above example (bin_PROGRAMS) and PROGRAMS is termed as Primary which represent the type of product that is expected to be produced,
+ which in this case is the list of binary files.
+\begin_inset Newline newline
+\end_inset
+
+Automake by default recognizes 4 type of variable which they can be treated as installation locations and they have a prefix pkg.
+ These variables are:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+pkgincludedir
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+pkgdatadir
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+pkglibexecdir
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+pkglibdir
+\end_layout
+
+\begin_layout Standard
+These pkg version of standard 
+\family typewriter
+libdir
+\family default
+,
+ 
+\family typewriter
+includedir
+\family default
+,
+ 
+\family typewriter
+datadir
+\family default
+ and 
+\family typewriter
+libexecdir 
+\family default
+indicates that the installation of the products listed in the PLV equivalent variable should be installed in the sub-directory of these location mentioned in these standard make variable where the sub-directory is named after the package.
+ For example,
+ our Project which is named as 
+\shape slanted
+Project
+\shape default
+ in our Figure 1,
+ will have binary files (like 
+\shape slanted
+myprog
+\shape default
+) installed in the 
+\shape slanted
+Project
+\shape default
+ sub-directory of the 
+\series bold
+bin
+\series default
+ system directory.
+ And yes,
+ we can change the installation directory from 
+\series bold
+bin
+\series default
+ to any other directory by overriding the value of the 
+\family typewriter
+$(bindir)
+\family default
+ variable in Makefile.
+\begin_inset Newline newline
+\end_inset
+
+We can also provide our own PLV custom prefix which represent a variable,
+ having the location for installation of some list of products.
+ For example,
+ for installation of some XML files to a custom location,
+ we can define a xmldir variable having value for the installation path and a PLV xml_DATA having value a list of xml files which will be installed in the installation path.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+xmldir = $(datadir)/xml
+\end_layout
+
+\begin_layout Plain Layout
+xml_DATA = file1.xml file2.xml file3.xml ...
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Custom PLV with variable in Makefile.am
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Installation location can default values which are either defined by Automake or by user itself.
+ However,
+ these default value can be overridden using the argument passed while running the configure script.
+\end_layout
+
+\end_body
+\end_document
