@@ -980,13 +980,19 @@ height "1pt"
 
 \end_inset
 
-
-\end_layout
-
-\begin_layout Standard
 Installation location can default values which are either defined by Automake or by user itself.
  However,
- these default value can be overridden using the argument passed while running the configure script.
+ these default value can be overridden using the argument passed while running the configure script or make command.
+ If we don't want to install certain products to the installation location,
+ Automake generated rules ensures to generate rules to handle such situations.
+ For example,
+ if we don't want to install binary and library files and only want to install the data files,
+ we can pass the command 
+\family typewriter
+make bindir='' libdir='' install
+\family default
+.
+ 
 \end_layout
 
 \end_body
