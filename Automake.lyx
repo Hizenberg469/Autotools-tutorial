@@ -946,6 +946,7 @@ height "1pt"
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
 inline false
 status open
 
@@ -978,6 +979,10 @@ offset "0.5ex"
 width "100col%"
 height "1pt"
 
+\end_inset
+
+
+\begin_inset Newline newline
 \end_inset
 
 Installation location can default values which are either defined by Automake or by user itself.
@@ -1076,7 +1081,7 @@ height "1pt"
 
 \begin_layout Standard
 \begin_inset listings
-lstparams "basicstyle={\rmfamily}"
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
 inline false
 status open
 
@@ -1149,10 +1154,7 @@ height "1pt"
 \end_inset
 
 
-\end_layout
-
-\begin_layout Standard
-\begin_inset space \space{}
+\begin_inset Newline newline
 \end_inset
 
 
@@ -1169,6 +1171,7 @@ height "1pt"
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
 inline false
 status open
 
@@ -1198,6 +1201,10 @@ offset "0.5ex"
 width "100col%"
 height "1pt"
 
+\end_inset
+
+
+\begin_inset Newline newline
 \end_inset
 
 In Listing 6 ### 1 ###,
@@ -1451,6 +1458,10 @@ If you notice,
 product source variable
 \shape default
  (PSV).
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset CommandInset line
 LatexCommand rule
 offset "0.5ex"
@@ -1464,6 +1475,7 @@ height "1pt"
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
 inline false
 status open
 
@@ -1483,6 +1495,10 @@ height "1pt"
 
 \end_inset
 
+
+\begin_inset Newline newline
+\end_inset
+
 Just like PLV which represent list of products,
  PSV represent list of files on which the product is dependent on.
  These are the source files which are used to build the products of the projects.
@@ -1491,6 +1507,10 @@ Just like PLV which represent list of products,
  and the at sign) are allowed in the product tag of a PSV.
  So,
  Automake converst illegal characters into underscores.
+\begin_inset Newline newline
+\end_inset
+
+
 \begin_inset CommandInset line
 LatexCommand rule
 offset "0.5ex"
@@ -1504,6 +1524,7 @@ height "1pt"
 
 \begin_layout Standard
 \begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
 inline false
 status open
 
@@ -1540,6 +1561,350 @@ height "1pt"
 
 \begin_layout Subsection
 PLV and PSV Modifiers
+\end_layout
+
+\begin_layout Standard
+Modifiers are optional prefix added to PLV or PSV to modify the behavior of these Automake variable which would have behaved differently if not added.
+ It is better to understand this with examples:
+\end_layout
+
+\begin_layout Itemize
+Some files may be intended to be distributed and some files may not,
+ while the distribution tarball is begin built.
+ This can be achieved for the case of source file by adding the prefix to PSV,
+ like the one shown below:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+dist_myprog_SOURCES = file1.c file2.c
+\end_layout
+
+\begin_layout Plain Layout
+nodist_myprog_SOURCES = file3.c file4.c
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Using the 
+\shape italic
+dist
+\shape default
+ and 
+\shape italic
+nodist
+\shape default
+ modifiers in a Makefile.am file.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Itemize
+Automake normally strips relative path information from the list of header files in a 
+\family typewriter
+HEADERS
+\family default
+ PLV.
+ The 
+\family typewriter
+nobase
+\family default
+ modifier restrict this behavior and let the directory structure of the project tree to be followed in the same area where the list of header files are installed (generally in system header file location).
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+nobase_pkginclude_HEADERS = mylib.h sys/constants.h
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Using the 
+\shape italic
+nobase
+\shape default
+ PLV modifier in a Makefile.am file.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+This ensures that the constanst.h file is stored in 
+\family typewriter
+$(pkginclude)
+\family default
+ directory inside 
+\family typewriter
+sys
+\family default
+ subdirectory.
+\end_layout
+
+\begin_layout Itemize
+The notrans modifier is generally used for not allowing any transformation to the name of the source file.
+ This generally occurs for man pages whose source file name is transformed from .
+\shape italic
+man
+\shape default
+ to .
+\shape italic
+N
+\shape default
+ (where N is 0,1,2,3...9).
+\end_layout
+
+\begin_layout Itemize
+There are certain source files which might be used for compilation of the executable product based on the condition defined in configure.ac,
+ so,
+ for such source file 
+\family typewriter
+EXTRA
+\family default
+ modifier is added to the PSV to handle such cases.
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+EXTRA_myprog_SOURCES = possibly.c
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Using the 
+\shape italic
+EXTRA
+\shape default
+ prefix with a product 
+\shape italic
+SOURCES
+\shape default
+ variable.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section
+Unit Testing:
+ Automake support for make check
+\end_layout
+
+\begin_layout Standard
+Check the example below first:
+\begin_inset Newline newline
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+...
+\end_layout
+
+\begin_layout Plain Layout
+check:
+ all
+\end_layout
+
+\begin_layout Plain Layout
+		./myprog | grep 
+\begin_inset Quotes eld
+\end_inset
+
+Hello from .*myprog!
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+		@echo 
+\begin_inset Quotes eld
+\end_inset
+
+*** ALL TESTS PASSED ***
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+...
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The 
+\shape italic
+check
+\shape default
+ target
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+As we can see to test the sanity of the executable produced by the build system,
+ in this case is a Makefile is used for testing.
+ Here,
+ it is executing the executable and using grep to check the output is as expected as shown above.
+ Automake can also automate this by using variables specific to this functionality.
+\begin_inset Newline newline
+\end_inset
+
+
 \end_layout
 
 \end_body
