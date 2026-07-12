@@ -1905,6 +1905,513 @@ As we can see to test the sanity of the executable produced by the build system,
 \end_inset
 
 
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+bin_PROGRAMS = myprog
+\end_layout
+
+\begin_layout Plain Layout
+myprog_SOURCES = myprog.c
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+check_SCRIPTS = greptest.sh   @1
+\end_layout
+
+\begin_layout Plain Layout
+TESTS = $(check_SCRIPTS)	  @2
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+greptest.sh:				  @3
+\end_layout
+
+\begin_layout Plain Layout
+		echo './myprog | grep 
+\begin_inset Quotes eld
+\end_inset
+
+Hello from .*jupiter!
+\begin_inset Quotes erd
+\end_inset
+
+' > greptest.sh
+\end_layout
+
+\begin_layout Plain Layout
+		chmod +x greptest.sh
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\begin_layout Plain Layout
+CLEANFILES = greptest.sh	  @4
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+src/Makefile.am:
+ Additional code required to support the check target
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+The 
+\family typewriter
+check_SCRIPTS
+\family default
+ (@1) is a PLV which refers to a script that is generated at build time.
+ This script is only generated when 
+\family typewriter
+make check
+\family default
+ command is executed.
+ Also,
+ we need to keep in mind that the generated script should be cleaned (or deleted) as they are not files which should be distributed.
+ So,
+ 
+\family typewriter
+CLEANFILES(@4)
+\family default
+ variable takes care about the cleaning part.
+\begin_inset Newline newline
+\end_inset
+
+The 
+\family typewriter
+TESTS
+\family default
+ (@2) line is the important one in Listing 13.
+ It tells which targets should be executed when make check is executed and since the 
+\family typewriter
+check_SCRIPTS
+\family default
+ have complete list of these target,
+ hence it is referenced.
+ However,
+ since 
+\family typewriter
+TESTS
+\family default
+ variable ensures that appropriate rules are generated so that the test scripts are build and executed successfully.
+ Therefore,
+ 
+\family typewriter
+check_SCRIPTS
+\family default
+ is redundant and can be skipped by replacing it with the contents of it.
+ 
+\family typewriter
+check_*
+\family default
+ PLVs becomes important only when helper scripts needs to build which are not executed directly but are executed by script which are listed in 
+\family typewriter
+TESTS
+\family default
+ variable.
+ Note,
+ 
+\family typewriter
+TESTS
+\family default
+ is actually for executing the script and Automake always build the script before executing if it is already not build.
+\end_layout
+
+\begin_layout Section
+Convenience Libraries:
+ Static libraries.
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+noinst_LIBRARIES = libcommon.a
+\end_layout
+
+\begin_layout Plain Layout
+libcomman_a_SOURCES = common.h print.c
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+common/Makefile.am:
+ To build the temporary library.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+The first line defines what library should be build and as you have noticed,
+ one 
+\family typewriter
+noinst
+\family default
+ modifier is used so that the build library is not installed into the system directory after the project is build and installed.
+ The goal of such library is to compile common code in one static library and used in many different section of the projects.
+ Here,
+ 
+\family typewriter
+libcommon.a
+\family default
+ is like a archive file which is given to compiler for compilation of executable.
+ The only difference between 
+\family typewriter
+.tar
+\family default
+ and 
+\family typewriter
+.a
+\family default
+ files is that the compiler know which object files to use to compile the executable which is present inside the static library.
+\end_layout
+
+\begin_layout Subsection
+Product Option Variables
+\end_layout
+
+\begin_layout Standard
+In order for the source files which will be used to build the executable to find the relevant code from the static library and also find the correct corresponding header files,
+ we need to add some additional information to the 
+\family typewriter
+Makefile.am
+\family default
+ (more specifically Makemodule.am)of the 
+\family typewriter
+src
+\family default
+ directory.
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset listings
+lstparams "basicstyle={\footnotesize\ttfamily},breaklines=true"
+inline false
+status open
+
+\begin_layout Plain Layout
+bin_PROGRAMS = myprog
+\end_layout
+
+\begin_layout Plain Layout
+myprog_SOURCES = main.c
+\end_layout
+
+\begin_layout Plain Layout
+myprog_CPPFLAGS = -I$(top_srcdir)/common
+\end_layout
+
+\begin_layout Plain Layout
+myprog_LDADD = ../common/libcommon.a
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+src/Makefile.am:
+ Adding compiler and linker directives to Makefile.am files.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\begin_inset CommandInset line
+LatexCommand rule
+offset "0.5ex"
+width "100col%"
+height "1pt"
+
+\end_inset
+
+
+\begin_inset Newline newline
+\end_inset
+
+The two new variable added here (
+\family typewriter
+myprog_CPPFLAGS
+\family default
+ and 
+\family typewriter
+myprog_LDADD
+\family default
+) are 
+\shape italic
+product option variables (POVs) 
+\shape default
+are used to specify product-specific options to tools that are used to build products from source code.
+ The 
+\family typewriter
+myprog_CPPFLAGS
+\family default
+ variable adds product-specific C-preprocessor flags to the compiler command line for all source files that are compiled for the 
+\family typewriter
+myprog
+\family default
+ program.
+ This add reference to the list of location that the compiler will look for header file when the source files are used for compilation.
+ The 
+\family typewriter
+myprog_LDADD
+\family default
+ variable is used to add libraries to the linker command line.
+ The path 
+\family typewriter
+../common/libcommon.a
+\family default
+ is added to the linker command line while building the 
+\family typewriter
+myprog
+\family default
+ product so that the relevant object files can be used to link and build the product.
+ The variables 
+\family typewriter
+program_LDADD
+\family default
+ and 
+\family typewriter
+program_LIBADD
+\family default
+ is only necessary for libraries that are built as part of our own package.
+ If our project requires libraries which are already a part of user's system,
+ then all we need is a macro call of 
+\family typewriter
+AC_CHECK_LIB
+\family default
+ or 
+\family typewriter
+AC_SEARCH_LIB
+\family default
+ in configure.ac file.
+ This will generate appropriate script in 
+\family typewriter
+configure
+\family default
+ that will add the references to these libraries in linker command via 
+\family typewriter
+LIBS
+\family default
+ variable.
+\begin_inset Newline newline
+\end_inset
+
+The set of POVs supported by Automake are listed below:
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+product_CPPFLAGS
+\family default
+:
+\begin_inset Newline newline
+\end_inset
+
+Use 
+\family typewriter
+product_CPPFLAGS
+\family default
+ to pass flags to the C preprocessor on compiler command line.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+product_CFLAGS
+\family default
+:
+\begin_inset Newline newline
+\end_inset
+
+Same as above but for C-compiler flags.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+product_LDFLAGS
+\family default
+:
+\begin_inset Newline newline
+\end_inset
+
+Use 
+\family typewriter
+product_LDFLAGS
+\family default
+ to pass global and order-independent shared library and program linker configuration flags and options to the linker,
+ including -static,
+ -version-info,
+ -release,
+ and so on.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+program_LDADD
+\family default
+:
+\begin_inset Newline newline
+\end_inset
+
+Use 
+\family typewriter
+program_LDADD
+\family default
+ to add libtool objects (
+\family typewriter
+.lo
+\family default
+) or libraries (
+\family typewriter
+.la
+\family default
+) or non-Libtool objects (
+\family typewriter
+.o
+\family default
+) or archives (.
+\family typewriter
+a
+\family default
+) to the linker command line when linking a program.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+library_LIBADD
+\family default
+:
+\begin_inset Newline newline
+\end_inset
+
+Use 
+\family typewriter
+library_LIBADD
+\family default
+ to add non-Libtool linker objects and archives to non-Libtool archives on the 
+\family typewriter
+ar
+\family default
+ utility command line.
+ The 
+\family typewriter
+ar
+\family default
+ utility will incorporate archives mentioned on the command line into the product archive,
+ so you can use this variable to gather multiple archives together into one.
+\end_layout
+
+\begin_layout Itemize
+
+\family typewriter
+ltlibrary_LIBADD
+\family default
+:
+\begin_inset Newline newline
+\end_inset
+
+Use 
+\family typewriter
+ltlibrary_LIBADD
+\family default
+ to add Libtool linker objects (
+\family typewriter
+.lo
+\family default
+) and Libtool static or shared libraries (
+\family typewriter
+.la
+\family default
+) to a Libtool static or shared library.
 \end_layout
 
 \end_body
